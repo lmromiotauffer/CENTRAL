@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Central de Ajuda do SINFRALOG — tutoriais, dúvidas frequentes, normas e contatos da equipe UNIGEP da Secretaria de Infraestrutura e Logística de Mato Grosso." />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef1f6" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141516" />
+    <link rel="icon" type="image/png" href="/logo-mt.png" />
+    <title>SINFRALOG — Central de Ajuda</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('central:theme-mode');
+          var mode = (stored === 'light' || stored === 'dark' || stored === 'auto') ? stored : 'auto';
+          var resolved = mode;
+          if (mode === 'auto') {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.dataset.theme = resolved;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="fundo-animado" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

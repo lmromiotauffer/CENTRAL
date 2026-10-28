@@ -1,0 +1,80 @@
+/* Fundo animado do design system (seção 6): três manchas azuis lentas + ruído estático.
+   A cor base fica no html porque o fundo do body pintaria por cima do z-index: -1. */
+html { background-color: #eef1f6; }
+html[data-theme='dark'] { background-color: #141516; }
+
+.fundo-animado {
+  position: fixed;
+  inset: -24px;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  --mancha-1: rgba(26, 50, 129, 0.34);
+  --mancha-2: rgba(36, 71, 181, 0.26);
+  --mancha-3: rgba(169, 188, 255, 0.7);
+}
+html[data-theme='dark'] .fundo-animado {
+  --mancha-1: rgba(58, 92, 214, 0.5);
+  --mancha-2: rgba(26, 50, 129, 0.7);
+  --mancha-3: rgba(142, 166, 255, 0.3);
+}
+
+/* Gradiente radial em vez de filter: blur — mesmo efeito visual, sem custo de filtro. */
+.fundo-animado span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  animation: mancha-atravessar linear infinite;
+  will-change: transform, opacity;
+}
+.fundo-animado span:nth-child(1) {
+  width: 560px; height: 560px;
+  background: radial-gradient(circle, var(--mancha-1) 0%, transparent 70%);
+  --de: -40vw, 5vh; --ate: 110vw, 45vh; --repouso: 8vw, 10vh;
+  animation-duration: 38s;
+  animation-delay: -12s;
+}
+.fundo-animado span:nth-child(2) {
+  width: 680px; height: 680px;
+  background: radial-gradient(circle, var(--mancha-2) 0%, transparent 70%);
+  --de: 110vw, 60vh; --ate: -50vw, 10vh; --repouso: 60vw, 45vh;
+  animation-duration: 52s;
+  animation-delay: -30s;
+}
+.fundo-animado span:nth-child(3) {
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, var(--mancha-3) 0%, transparent 70%);
+  --de: 20vw, 110vh; --ate: 70vw, -60vh; --repouso: 30vw, 55vh;
+  animation-duration: 61s;
+  animation-delay: -20s;
+}
+
+@keyframes mancha-atravessar {
+  0%   { transform: translate(var(--de));  opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translate(var(--ate)); opacity: 0; }
+}
+
+/* Ruído estático sobre o fundo. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+html[data-theme='dark'] body::after { opacity: 0.045; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fundo-animado span { animation: none; transform: translate(var(--repouso)); }
+}
+
+@media print {
+  .fundo-animado, body::after { display: none; }
+  html { background-color: #ffffff; }
+}

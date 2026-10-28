@@ -1,0 +1,15 @@
+/* ── IBM Plex Sans (variável 400–700, subset latino) ───────────── */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('../assets/fonts/ibm-plex-sans/IBMPlexSans-Variable.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-weight: 400 700;
+  font-style: italic;
+  font-display: swap;
+  src: url('../assets/fonts/ibm-plex-sans/IBMPlexSans-Italic-Variable.woff2') format('woff2');
+}
