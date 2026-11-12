@@ -15,7 +15,7 @@ import EastIcon from '@mui/icons-material/East';
 import WestIcon from '@mui/icons-material/West';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
 import { getTutorial, getTutorialsByModule } from '@/lib/tutorials';
 import { normalizeTutorialStepTitle } from '@/lib/tutorialSteps';
 import { modules } from '@/content/modules';
@@ -95,7 +95,10 @@ function TutorialBody({ tut, mod, siblings }: TutorialBodyProps) {
   const { Component } = tut;
   const contentRef = useRef<HTMLDivElement>(null);
   const [steps, setSteps] = useState<string[]>(['Introdução']);
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  // A etapa vive na URL (?etapa=2, contada a partir de 1) para sobreviver a recarregar e compartilhar.
+  const [params, setParams] = useSearchParams();
+  const etapaPedida = Number(params.get('etapa')) - 1;
+  const activeStepIndex = steps[etapaPedida] === undefined ? 0 : etapaPedida;
   const hasMultipleSteps = steps.length > 1;
 
   useLayoutEffect(() => {
@@ -126,6 +129,9 @@ function TutorialBody({ tut, mod, siblings }: TutorialBodyProps) {
         element.dataset.tutorialChrome = 'true';
         if (currentStep === 0 && !currentStepHasContent && nextSteps[0] === 'Introdução') {
           nextSteps[0] = currentTitle;
+        } else if (!currentStepHasContent) {
+          // Título seguido direto de subtítulo: junta os dois em vez de abrir uma etapa vazia.
+          nextSteps[currentStep] = `${nextSteps[currentStep]} · ${currentTitle}`;
         } else {
           currentStep += 1;
           currentStepHasContent = false;
@@ -141,7 +147,8 @@ function TutorialBody({ tut, mod, siblings }: TutorialBodyProps) {
   }, [tut.slug, tut.title]);
 
   const goToStep = (index: number) => {
-    setActiveStepIndex(index);
+    // replace: o botão Voltar do navegador continua saindo do tutorial, como antes.
+    setParams(index === 0 ? {} : { etapa: String(index + 1) }, { replace: true });
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   };
 
@@ -225,6 +232,8 @@ function TutorialBody({ tut, mod, siblings }: TutorialBodyProps) {
                         sx={{
                           justifyContent: 'flex-start',
                           minHeight: 48,
+                          // Sem isto a lista com rolagem espreme o botão e o título de várias linhas invade o vizinho.
+                          flexShrink: 0,
                           px: 1.25,
                           py: 1,
                           borderRadius: radius.control,

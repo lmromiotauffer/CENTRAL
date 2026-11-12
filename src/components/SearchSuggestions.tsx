@@ -87,7 +87,8 @@ export default function SearchSuggestions({
           <Box
             component="button"
             type="button"
-            onMouseDown={e => { e.preventDefault(); onClearGroup(); }}
+            onMouseDown={e => e.preventDefault()}
+            onClick={onClearGroup}
             sx={{
               all: 'unset',
               cursor: 'pointer',
@@ -109,7 +110,9 @@ export default function SearchSuggestions({
             key={term}
             component="button"
             type="button"
-            onMouseDown={e => { e.preventDefault(); onSelectTerm(term); }}
+            // mousedown só segura o foco no campo; a ação fica no click, que Enter e Espaço também disparam.
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => onSelectTerm(term)}
             sx={chipSx}
           >
             {term}

@@ -111,7 +111,8 @@ export default function SearchBar({ variant, sx, defaultValue }: Props) {
       setHighlight(prev => (prev <= 0 ? total - 1 : prev - 1));
       return;
     }
-    if (e.key === 'Escape' || e.key === 'Tab') closeAndCollapse();
+    // Tab não fecha: os atalhos do painel vêm depois do campo na ordem de foco. Sair do form fecha (handleBlur).
+    if (e.key === 'Escape') closeAndCollapse();
   };
 
   const shouldOpen = (value: string) => value.length >= MIN_CHARS || value.length === 0;
@@ -183,7 +184,11 @@ export default function SearchBar({ variant, sx, defaultValue }: Props) {
       }}
       onSubmitAll={() => submitAll(q)}
       onHoverIndex={setHighlight}
-      onClear={clearRecent}
+      onClear={() => {
+        clearRecent();
+        // Pelo teclado, o botão "Limpar" focado some junto com a lista: devolve o foco ao campo.
+        inputRef.current?.focus();
+      }}
       topOffset={variant === 'underline' ? 2 : 1}
     />
   ) : null;
@@ -258,7 +263,7 @@ export default function SearchBar({ variant, sx, defaultValue }: Props) {
         placeholder={isNavChip && !expanded ? 'BUSCAR' : 'Pesquisar na Central'}
         inputProps={{
           ...commonInputAria,
-          ...(isNavChip ? { 'aria-label': 'Buscar na Central', id: 'search-nav' } : { id: 'search-underline' }),
+          ...(isNavChip && { 'aria-label': 'Buscar na Central' }),
           name: 'q',
         }}
         sx={{

@@ -45,6 +45,9 @@ export default function TopNavBar() {
   const isHome = location.pathname === '/';
   const showNavSearch = !isHome || hasScrolledHome;
 
+  // Toda navegação fecha o menu do celular, inclusive a busca feita dentro dele.
+  useEffect(() => setOpen(false), [location.key]);
+
   useEffect(() => {
     if (!isHome) {
       setHasScrolledHome(false);
@@ -289,7 +292,6 @@ export default function TopNavBar() {
                   component={NavLink}
                   to={l.to}
                   end={l.to === '/'}
-                  onClick={() => setOpen(false)}
                   sx={{
                     '&.active .MuiListItemIcon-root, &.active .MuiListItemText-primary': { color: sinfra.accent },
                   }}

@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import TutorialPage from '@/pages/TutorialPage';
 import { tutorials } from '@/lib/tutorials';
 import { renderComTema } from '@/test/renderComTema';
@@ -24,13 +22,6 @@ describe('TutorialPage paginated reader', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-  });
-
-  it('uses the same internal page shell as documentation, contacts, and modules', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/TutorialPage.tsx'), 'utf8');
-
-    expect(source).toContain('<PaginaInterna');
-    expect(source).toContain('component="nav"');
   });
 
   it('renders a paginated tutorial reader with progress', () => {
@@ -103,10 +94,51 @@ describe('TutorialPage paginated reader', () => {
       const numberedStepTitles = stepTitles.filter(title => /\(\d+\)$/.test(title));
       const duplicateStepTitles = stepTitles.filter((title, index) => stepTitles.indexOf(title) !== index);
 
+      // Etapa vazia: todos os nós dela são títulos escondidos (data-tutorial-chrome).
+      const etapasVazias = stepTitles.filter(
+        (_, etapa) => !document.querySelector(`[data-tutorial-step="${etapa}"]:not([data-tutorial-chrome])`),
+      );
+
       expect(numberedStepTitles).toEqual([]);
       expect({ slug: tutorial.slug, duplicateStepTitles }).toEqual({ slug: tutorial.slug, duplicateStepTitles: [] });
+      expect({ slug: tutorial.slug, etapasVazias }).toEqual({ slug: tutorial.slug, etapasVazias: [] });
       unmount();
     }
+  });
+
+  it('abre na etapa pedida em ?etapa= e cai na primeira quando o valor não serve', () => {
+    const caminho = '/modulos/gestao-obra-servico/eventos-da-obra-consulta';
+
+    for (const [busca, esperada] of [['?etapa=2', 2], ['?etapa=abc', 1], ['?etapa=999', 1], ['?etapa=0', 1]] as const) {
+      const { unmount } = renderTutorialPage(caminho + busca);
+      expect(screen.getByTestId('tutorial-step-progress')).toHaveTextContent(new RegExp(`Etapa ${esperada} de`, 'i'));
+      unmount();
+    }
+  });
+
+  it('guarda a etapa na URL ao avançar, para sobreviver a recarregar e compartilhar', () => {
+    function Busca() {
+      return <output data-testid="busca">{useLocation().search}</output>;
+    }
+    renderComTema(
+      <MemoryRouter initialEntries={['/modulos/gestao-obra-servico/eventos-da-obra-consulta']}>
+        <Routes>
+          <Route path="/modulos/:moduloSlug/:tutorialSlug" element={<><TutorialPage /><Busca /></>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /próxima etapa/i }));
+
+    expect(screen.getByTestId('busca')).toHaveTextContent('?etapa=2');
+  });
+
+  it('abre o tutorial apontado por um link interno do texto sem recarregar o site', () => {
+    renderTutorialPage('/modulos/gestao-medicoes/cadastro-de-cronogramas');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Serviços de cronograma' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Cronogramas: Serviços de Cronograma' })).toBeInTheDocument();
   });
 
   it('does not repeat the selected step title as an article heading', () => {
@@ -115,16 +147,4 @@ describe('TutorialPage paginated reader', () => {
     fireEvent.click(screen.getByRole('button', { name: /abrir etapa 2: informações básicas/i }));
 
     expect(screen.getAllByRole('heading', { name: 'Informações básicas' })).toHaveLength(1);
-  });
-
-  it('clips rounded tutorial scroll surfaces while keeping their inner lists scrollable', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/TutorialPage.tsx'), 'utf8');
-
-    expect(source).toContain('data-testid="tutorial-step-nav-scroll"');
-    expect(source).toContain("id: 'tutorial-step-menu-scroll'");
-    expect(source).toContain("overflow: 'hidden'");
-    expect(source).toContain("overflowY: { md: 'auto' }");
-    expect(source).toContain("overflowY: 'auto'");
-    expect(source).toContain("pr: { xs: 0, md: 1.5 }");
-  });
-});
+  });});

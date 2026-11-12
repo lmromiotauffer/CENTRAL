@@ -38,7 +38,7 @@ As rotas estão em `src/App.tsx`; todas usam a casca `MainLayout` (barra superio
 | Início | `/` | Herói com imagens rotativas, busca, grade de módulos e seção de dúvidas frequentes (`#duvidas`) |
 | Módulos | `/modulos` | Catálogo dos módulos do SINFRALOG |
 | Módulo | `/modulos/:moduloSlug` | Tutoriais do módulo, ordenados pelo campo `order` |
-| Tutorial | `/modulos/:moduloSlug/:tutorialSlug` | Leitor de tutorial dividido em etapas, com navegação lateral, imagens ampliáveis e links para o anterior e o próximo |
+| Tutorial | `/modulos/:moduloSlug/:tutorialSlug` | Leitor de tutorial dividido em etapas, com navegação lateral, imagens ampliáveis e links para o anterior e o próximo. A etapa aberta fica na URL (`?etapa=3`), então o link de um passo pode ser compartilhado |
 | Vídeos | `/videos` | Vídeos do canal oficial, agrupados por módulo, incorporados via `youtube-nocookie` |
 | Busca | `/busca?q=` | Resultados agrupados por tipo: tutoriais, módulos, FAQ, documentação, contatos e vídeos |
 | Documentação | `/documentacao` | Instruções normativas e portarias em PDF, com link para o suporte |
@@ -69,11 +69,15 @@ SPA em React 19 servida como arquivos estáticos. Não há servidor de aplicaç�
 
 - **Frontmatter** é extraído pelos plugins `remark-frontmatter` e `remark-mdx-frontmatter` configurados no `vite.config.ts`. O plugin MDX recebe um filtro para ignorar importações com `?raw`; sem isso, o Vitest transformaria o texto bruto em componente e a busca perderia o conteúdo.
 
-- **Etapas do tutorial** não estão no frontmatter: `TutorialPage.tsx` lê os filhos do artigo renderizado e cria uma etapa para cada título `##` ou `###` do MDX. Um `#` que repete o título do tutorial é ocultado. Os títulos do MDX são rebaixados um nível na renderização (`#` vira `h2`, `##` vira `h3`) para que o cabeçalho da página seja o único `h1`.
+- **Etapas do tutorial** não estão no frontmatter: `TutorialPage.tsx` lê os filhos do artigo renderizado e cria uma etapa para cada título `##` ou `###` do MDX. Um título seguido direto de um subtítulo, sem texto entre os dois, não vira etapa vazia: os dois se juntam em uma etapa só ("Título · Subtítulo"). A etapa aberta é lida de `?etapa=N` (a partir de 1; valor inválido abre a primeira). Um `#` que repete o título do tutorial é ocultado. Os títulos do MDX são rebaixados um nível na renderização (`#` vira `h2`, `##` vira `h3`) para que o cabeçalho da página seja o único `h1`.
 
 - **Imagens** dentro do MDX são substituídas pelo componente `TutorialImage` (`src/components/mdx/index.tsx`), que abre a imagem ampliada em um diálogo com animação a partir da miniatura e respeita `prefers-reduced-motion`.
 
+- **Links** dentro do MDX que apontam para uma rota do site (começam com `/` e não têm extensão de arquivo, como `/modulos/gestao-contratos/servicos`) trocam de página pelo roteador, sem recarregar. Um teste confere que todo link `/modulos/...` aponta para um tutorial que existe.
+
 - **Módulos, vídeos, normas, FAQ e contatos** são arrays TypeScript em `src/content/`, tipados em `src/types/content.ts`.
+
+- **Ano do conteúdo** ("ATUALIZADO PARA 2026" na Home e no catálogo) é a constante `anoDoConteudo` em `src/content/modules.ts`. Ela não acompanha o relógio: troque à mão quando o conteúdo for revisado.
 
 ### Busca
 
@@ -184,7 +188,7 @@ Não há variáveis de ambiente nem arquivo `.env`.
 
 3. Coloque as imagens em `public/tutorials/<modulo>/<slug>/` e referencie por caminho absoluto: `![Imagem 1 - Dados Gerais](/tutorials/<modulo>/<slug>/01.png)`. O texto alternativo aparece no diálogo de ampliação.
 
-4. Estruture o texto com `##` para cada etapa. Cada `##` ou `###` vira uma etapa com navegação própria; o conteúdo antes do primeiro título vira a etapa "Introdução". Um `#` que repita o título do tutorial (por exemplo, `# Cadastro de Contratos` em "Cadastro de Contratos: Dados Gerais") é ocultado automaticamente.
+4. Estruture o texto com `##` para cada etapa. Cada `##` ou `###` vira uma etapa com navegação própria; o conteúdo antes do primeiro título vira a etapa "Introdução". Se um `##` vier seguido direto de um `###`, os dois títulos se juntam em uma etapa só. Um `#` que repita o título do tutorial (por exemplo, `# Cadastro de Contratos` em "Cadastro de Contratos: Dados Gerais") é ocultado automaticamente.
 
 O tutorial aparece na página do módulo e na busca sem nenhum registro adicional.
 
@@ -208,14 +212,14 @@ Edite `src/content/faq.ts` (`pergunta`, `resposta`, `categoria`) ou `src/content
 
 ## Testes
 
-Vitest com jsdom e Testing Library. Estado atual: 29 arquivos, 127 testes, todos passando.
+Vitest com jsdom e Testing Library. Estado atual: 27 arquivos, 116 testes, todos passando.
 
 | Grupo | Cobre |
 |-------|-------|
-| `tests/components` | Busca e sugestões (teclado, debounce, recentes), cartões, FAQ, alternador de tema, imagem ampliável, scroll ao topo |
-| `tests/pages` | Home, Módulos, Módulo, Tutorial (etapas, títulos, navegação), Documentação |
-| `tests/layout` | Barra superior (busca ao rolar, via stub de `IntersectionObserver`) e rodapé |
-| `tests/lib` | Índice de busca, carga dos tutoriais, normalização de etapas, iniciais |
+| `tests/components` | Busca e sugestões (teclado, debounce, recentes), cartão de contato, FAQ, alternador de tema, imagem ampliável, scroll ao topo |
+| `tests/pages` | Home, Módulos, Módulo, Tutorial (etapas sem conteúdo vazio, etapa na URL, títulos, navegação, links internos), Busca, Documentação |
+| `tests/layout` | Barra superior (busca ao rolar, via stub de `IntersectionObserver`; menu do celular fecha ao navegar) e rodapé |
+| `tests/lib` | Índice de busca, carga dos tutoriais, links internos entre tutoriais, normalização de etapas, iniciais |
 | `tests/content` | Integridade dos módulos e contatos |
 | `tests/theme` | `buildTheme`, persistência e resolução do modo, provider |
 

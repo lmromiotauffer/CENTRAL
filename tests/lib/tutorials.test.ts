@@ -25,4 +25,13 @@ describe('tutorials loader', () => {
     expect(getTutorialsByModule('gestao-fiscalizacao').length).toBeGreaterThan(0);
     expect(getTutorial('gestao-medicoes', 'cadastro-de-medicoes')?.title).toBe('Medições: Cadastro de Medições');
   });
+
+  it('todo link interno de tutorial aponta para um tutorial que existe', () => {
+    const quebrados = tutorials.flatMap(t =>
+      [...t.rawText.matchAll(/\]\(\/modulos\/([^/)#]+)\/([^)#]+)/g)]
+        .filter(([, modulo, slug]) => !getTutorial(modulo, slug))
+        .map(([link]) => `${t.slug}: ${link}`));
+
+    expect(quebrados).toEqual([]);
+  });
 });

@@ -2,7 +2,7 @@ import { Box, Grid } from '@mui/material';
 import HomeModuleTile from '@/components/HomeModuleTile';
 import PageHeader from '@/components/PageHeader';
 import PaginaInterna from '@/components/PaginaInterna';
-import { modules } from '@/content/modules';
+import { anoDoConteudo, modules } from '@/content/modules';
 
 // Container policy: maxWidth="xl" (1440 @ xl+; 1200 @ lg) — índice de módulos
 
@@ -11,7 +11,7 @@ export default function Modules() {
     <PaginaInterna crumbs={[{ label: 'Início', to: '/' }, { label: 'Módulos' }]}>
       <Box sx={{ maxWidth: 720, mx: 'auto' }}>
         <PageHeader
-          eyebrow={`Catálogo · ${new Date().getFullYear()}`}
+          eyebrow={`Catálogo · ${anoDoConteudo}`}
           title={
             <>
               Módulos do <em>sistema</em>.

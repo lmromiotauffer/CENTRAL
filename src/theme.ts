@@ -120,7 +120,6 @@ export const motion = {
 
 export const curva = {
   suave: 'cubic-bezier(0.16, 1, 0.3, 1)',
-  saida: 'cubic-bezier(0.4, 0, 1, 1)',
   cor:   'cubic-bezier(0.4, 0, 0.2, 1)',
 } as const;
 

@@ -1,4 +1,5 @@
-import { useRef, useState, type ImgHTMLAttributes } from 'react';
+import { useRef, useState, type AnchorHTMLAttributes, type ImgHTMLAttributes } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, ButtonBase, Dialog, IconButton, Tooltip, Typography } from '@mui/material';
@@ -176,4 +177,10 @@ function TutorialImage({ src, alt = '', ...props }: ImgHTMLAttributes<HTMLImageE
   );
 }
 
-export const mdxComponents = { img: TutorialImage };
+// Rota do site (começa com "/" e não tem extensão de arquivo) troca de página pelo roteador;
+// um <a> comum recarregaria o site inteiro. Arquivos de public/ e links externos seguem como <a>.
+function LinkDoTutorial({ href = '', ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return /^\/[^.]*$/.test(href) ? <RouterLink to={href} {...props} /> : <a href={href} {...props} />;
+}
+
+export const mdxComponents = { img: TutorialImage, a: LinkDoTutorial };

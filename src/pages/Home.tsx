@@ -8,7 +8,7 @@ import SearchBar from '@/components/SearchBar';
 import HomeModuleTile from '@/components/HomeModuleTile';
 import FAQItem from '@/components/FAQItem';
 import SectionEyebrow from '@/components/SectionEyebrow';
-import { modules } from '@/content/modules';
+import { anoDoConteudo, modules } from '@/content/modules';
 import { faq } from '@/content/faq';
 import { useSinfra } from '@/theme/ThemeModeProvider';
 import { fonts, typeScale, spacing, motion, curva } from '@/theme';
@@ -32,21 +32,25 @@ const heroImages = Object.values(
 );
 
 const HERO_IMAGE_INTERVAL_MS = 6500;
-const currentContentYear = new Date().getFullYear();
 
-function getNextHeroImageIndex(currentIndex: number) {
-  const nextOffset = Math.floor(Math.random() * (heroImages.length - 1)) + 1;
-  return (currentIndex + nextOffset) % heroImages.length;
+// Sorteia entre as fotos que não estão na tela; com menos de 3 fotos repete a primeira em uso.
+function getNextHeroImageIndex(...emUso: number[]) {
+  const livres = heroImages.map((_, i) => i).filter(i => !emUso.includes(i));
+  return livres[Math.floor(Math.random() * livres.length)] ?? emUso[0];
 }
 
 export default function Home() {
   const sinfra = useSinfra();
   useScrollToHash('start');
   const [heroImageState, setHeroImageState] = useState(() => ({
+    indiceAnterior: -1,
     activeIndex: 0,
     preloadIndex: getNextHeroImageIndex(0),
   }));
-  const visibleHeroImageIndexes = [heroImageState.activeIndex, heroImageState.preloadIndex];
+  const { indiceAnterior, activeIndex, preloadIndex } = heroImageState;
+  // A foto que sai fica por baixo da nova durante a troca; sem ela, a nova surgiria sobre o vazio.
+  // A ordem importa: quem vem depois é pintado por cima.
+  const visibleHeroImageIndexes = [...new Set([indiceAnterior, activeIndex, preloadIndex])].filter(i => i >= 0);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -54,13 +58,11 @@ export default function Home() {
     }
 
     const intervalId = window.setInterval(() => {
-      setHeroImageState((currentState) => {
-        const activeIndex = currentState.preloadIndex;
-        return {
-          activeIndex,
-          preloadIndex: getNextHeroImageIndex(activeIndex),
-        };
-      });
+      setHeroImageState(({ activeIndex: sai, preloadIndex: entra }) => ({
+        indiceAnterior: sai,
+        activeIndex: entra,
+        preloadIndex: getNextHeroImageIndex(entra, sai),
+      }));
     }, HERO_IMAGE_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);
@@ -102,7 +104,7 @@ export default function Home() {
               alt=""
               aria-hidden="true"
               data-home-hero-image="true"
-              loading={imageIndex === heroImageState.activeIndex ? 'eager' : 'lazy'}
+              loading={imageIndex === activeIndex ? 'eager' : 'lazy'}
               sx={{
                 position: 'absolute',
                 inset: 0,
@@ -111,7 +113,7 @@ export default function Home() {
                 objectFit: 'cover',
                 objectPosition: { xs: 'center', md: 'right center' },
                 filter: 'grayscale(0.4) saturate(0.75) contrast(1.08)',
-                opacity: imageIndex === heroImageState.activeIndex ? 1 : 0,
+                opacity: imageIndex === activeIndex || imageIndex === indiceAnterior ? 1 : 0,
                 transition: 'opacity 1100ms ease-in-out',
                 '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
               }}
@@ -141,7 +143,7 @@ export default function Home() {
               animation: `${fadeUp} ${motion.hero} ease-out 120ms forwards`,
             }}
           >
-            ATUALIZADO PARA {currentContentYear}
+            ATUALIZADO PARA {anoDoConteudo}
           </SectionEyebrow>
 
           <Typography
@@ -189,7 +191,7 @@ export default function Home() {
           }}
         >
           <SectionEyebrow sx={{ mb: 3, opacity: 0.75 }}>
-            ÍNDICE DE SISTEMAS — {currentContentYear}
+            ÍNDICE DE SISTEMAS — {anoDoConteudo}
           </SectionEyebrow>
 
           <Box

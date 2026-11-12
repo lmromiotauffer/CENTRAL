@@ -1,5 +1,8 @@
 import type { ModuleMeta } from '@/types/content';
 
+// Ano mostrado em "ATUALIZADO PARA" e no catálogo. Troque à mão quando o conteúdo for revisado.
+export const anoDoConteudo = 2026;
+
 export const modules: ModuleMeta[] = [
   { slug: 'gestao-contratos', title: 'Gestão de Contratos',
     description: 'Informações básicas do contrato, situações, valores, prazos, equipe, aditivos, garantias e documentos.',

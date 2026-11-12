@@ -14,7 +14,8 @@ export default function SearchResults() {
   const sinfra = useSinfra();
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
-  const results = useMemo(() => search(q), [q]);
+  // Sem limite: esta página é o destino de "Ver todos os resultados".
+  const results = useMemo(() => search(q, Infinity), [q]);
   const grouped = groupByKind(results);
 
   const countLabel = `${results.length} resultado${results.length === 1 ? '' : 's'}`;

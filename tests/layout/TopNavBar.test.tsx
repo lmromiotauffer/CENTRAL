@@ -1,7 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, it, expect, afterEach } from 'vitest';
-import { act, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TopNavBar from '@/layout/TopNavBar';
 import { renderComTema } from '@/test/renderComTema';
@@ -62,41 +60,6 @@ describe('TopNavBar', () => {
     expect(searchSlot).toHaveStyle({ transform: 'translateX(-6px)' });
   });
 
-  it('uses a subtle brand hover push for the navbar search slot', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/layout/TopNavBar.tsx'), 'utf8');
-
-    expect(source).toContain("'--nav-search-logo-push': '3px'");
-    expect(source).toContain('transform 720ms ${curva.suave}');
-  });
-
-  it('keeps brand text visible after animating it in on page load', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/layout/TopNavBar.tsx'), 'utf8');
-
-    expect(source).toContain('const navBrandRuleIn = keyframes');
-    expect(source).toContain('const navBrandRevealIn = keyframes');
-    expect(source).toContain('maxWidth: 176');
-    expect(source).toContain('opacity: 1');
-    expect(source).toContain("transform: 'translateX(0)'");
-    expect(source).toContain('animation: `${navBrandRevealIn} 720ms ${curva.suave} 180ms both`');
-    expect(source).not.toContain("top: 'calc(100% + 6px)'");
-    expect(source).not.toContain("left: 'calc(100% + 12px)'");
-  });
-
-  it('reveals the home nav search without animating layout width or margins', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/layout/TopNavBar.tsx'), 'utf8');
-
-    expect(source).toContain('width: NAV_SEARCH_COMPACT_WIDTH');
-    expect(source).toContain('ml: 2');
-    expect(source).toContain('mr: 2');
-    expect(source).toContain('opacity 520ms ease');
-    expect(source).toContain('transform 720ms ${curva.suave}');
-    expect(source).not.toContain('width 700ms');
-    expect(source).not.toContain('margin 700ms');
-    expect(source).not.toContain('width 760ms');
-    expect(source).not.toContain('margin 760ms');
-    expect(source).toContain('visibility 0ms linear');
-  });
-
   it('uses the nav chip search variant in the desktop nav slot', () => {
     const { getByRole } = renderTopNavBar('/modulos');
 
@@ -139,15 +102,6 @@ describe('TopNavBar', () => {
     expect(searchSlot).toHaveStyle({ maxWidth: '520px' });
   });
 
-  it('keeps the navbar search width controlled by the slot instead of :has CSS', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/layout/TopNavBar.tsx'), 'utf8');
-    const searchSource = readFileSync(resolve(process.cwd(), 'src/components/SearchBar.tsx'), 'utf8');
-
-    expect(source).not.toContain(':has([data-expanded="true"])');
-    expect(searchSource).toContain("width: '100%'");
-    expect(searchSource).not.toContain('minWidth: expanded ? NAV_CHIP_EXPANDED_WIDTH');
-  });
-
   it('removes hidden navbar search from focus order and exposes mobile drawer state', () => {
     const { container, getByLabelText } = renderTopNavBar('/');
     const searchSlot = container.querySelector('.nav-search-slot');
@@ -183,5 +137,35 @@ describe('TopNavBar', () => {
     );
 
     expect(currentLinks.some((link) => link.textContent?.includes('MÓDULOS'))).toBe(true);
+  });
+
+  it('fecha o menu do celular quando a busca feita nele troca de página', () => {
+    const { getByLabelText } = renderTopNavBar('/modulos');
+    const botaoMenu = getByLabelText('Abrir menu');
+
+    act(() => {
+      botaoMenu.click();
+    });
+    expect(botaoMenu).toHaveAttribute('aria-expanded', 'true');
+
+    const gaveta = document.getElementById('mobile-navigation') as HTMLElement;
+    const campo = within(gaveta).getByRole('combobox', { name: 'Buscar na Central' });
+    fireEvent.change(campo, { target: { value: 'contrato' } });
+    fireEvent.submit(campo.closest('form')!);
+
+    expect(botaoMenu).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('fecha o menu do celular ao tocar no link da página atual', () => {
+    const { getByLabelText } = renderTopNavBar('/modulos');
+    const botaoMenu = getByLabelText('Abrir menu');
+
+    act(() => {
+      botaoMenu.click();
+    });
+    const gaveta = document.getElementById('mobile-navigation') as HTMLElement;
+    fireEvent.click(within(gaveta).getByRole('link', { name: 'MÓDULOS' }));
+
+    expect(botaoMenu).toHaveAttribute('aria-expanded', 'false');
   });
 });

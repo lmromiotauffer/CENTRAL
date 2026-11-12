@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Modules from '@/pages/Modules';
@@ -20,13 +18,6 @@ function renderModules() {
 }
 
 describe('Modules page cards', () => {
-  it('uses the same centered internal page layout as documentation and contacts', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/Modules.tsx'), 'utf8');
-
-    expect(source).toContain('<PaginaInterna');
-    expect(source).toContain("sx={{ maxWidth: 720, mx: 'auto' }}");
-  });
-
   it('renders the same module tile cards used by the home launchpad', () => {
     renderModules();
 

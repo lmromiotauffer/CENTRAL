@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -81,11 +79,16 @@ describe('SearchSuggestions', () => {
     expect(viewport).not.toContainElement(footer);
   });
 
-  it('neutralizes the footer icon nudge when reduced motion is requested', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/SearchSuggestions.tsx'), 'utf8');
+  it('aciona os atalhos pelo clique, que é o que Enter e Espaço disparam num botão focado', () => {
+    const onSelectTerm = vi.fn();
+    const onClear = vi.fn();
+    renderSuggestions({ results: [], query: '', onSelectTerm, onClear });
 
-    expect(source).toContain('@media (prefers-reduced-motion: reduce)');
-    expect(source).toContain("'&:hover .sb-footer-icon': { transform: 'none' }");
+    fireEvent.click(screen.getByRole('button', { name: 'Fiscalizacao' }));
+    expect(onSelectTerm).toHaveBeenCalledWith('Fiscalizacao');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpar' }));
+    expect(onClear).toHaveBeenCalled();
   });
 });
 

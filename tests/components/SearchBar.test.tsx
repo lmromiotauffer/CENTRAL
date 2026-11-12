@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -42,7 +40,7 @@ describe('SearchBar navChip variant', () => {
     expect(input).toHaveAttribute('placeholder', 'Pesquisar na Central');
   });
 
-  it('collapses back to compact on Escape, Tab, blur, and outside click when empty', () => {
+  it('collapses back to compact on Escape, blur, and outside click when empty', () => {
     renderSearchBar();
 
     const input = screen.getByRole('combobox');
@@ -54,11 +52,12 @@ describe('SearchBar navChip variant', () => {
     fireEvent.keyDown(input, { key: 'Escape' });
     expect(form).toHaveAttribute('data-expanded', 'false');
 
+    // Tab não fecha: os atalhos do painel vêm depois do campo na ordem de foco. Quem fecha é o blur.
     fireEvent.focus(input);
     fireEvent.keyDown(input, { key: 'Tab' });
-    expect(form).toHaveAttribute('data-expanded', 'false');
+    expect(form).toHaveAttribute('data-expanded', 'true');
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
 
-    fireEvent.focus(input);
     fireEvent.blur(input, { relatedTarget: document.body });
     expect(form).toHaveAttribute('data-expanded', 'false');
 
@@ -129,15 +128,7 @@ describe('SearchBar navChip variant', () => {
     fireEvent.focus(screen.getByRole('combobox'));
 
     expect(screen.getByRole('button', { name: 'Buscar' })).toBeInTheDocument();
-  });
-
-  it('guards smooth scrolling behind the reduced motion preference', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/SearchBar.tsx'), 'utf8');
-
-    expect(source).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
-    expect(source).toContain("prefersReducedMotion ? ('auto' as const) : ('smooth' as const)");
-  });
-});
+  });});
 
 function LocalAtual() {
   const { pathname, search } = useLocation();

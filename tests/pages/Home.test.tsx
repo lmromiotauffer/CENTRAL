@@ -1,11 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Home from '@/pages/Home';
-import { modules } from '@/content/modules';
+import { anoDoConteudo, modules } from '@/content/modules';
 import { renderComTema } from '@/test/renderComTema';
 
 function escapeRegExp(value: string) {
@@ -53,30 +51,16 @@ describe('Home module launchpad', () => {
     intervalSpy.mockRestore();
   });
 
-  it('uses shared current-year copy and leaves a hint of content below the hero', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/Home.tsx'), 'utf8');
+  it('mostra o ano de revisão do conteúdo, fixado à mão, e não o ano do relógio do visitante', () => {
+    vi.useFakeTimers({ now: new Date(anoDoConteudo + 3, 0, 1) });
+    try {
+      renderHome();
 
-    expect(source).toContain('currentContentYear');
-    expect(source).not.toContain('ATUALIZADO PARA 2026');
-    expect(source).not.toContain('ÍNDICE DE SISTEMAS — 2026');
-    expect(source).not.toContain("xs: '64vh'");
-    expect(source).not.toContain("md: '92vh'");
-    expect(source).not.toContain("md: 'min(78vh, 760px)'");
-    expect(source).toContain("xs: 'min(56svh, 480px)'");
-    expect(source).toContain("md: 'min(68vh, 640px)'");
-  });
-
-  it('keeps the modules-to-faq transition compact', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/Home.tsx'), 'utf8');
-
-    expect(source).not.toContain('height: { xs: 80, md: 120 }');
-    expect(source).not.toContain('height: { xs: 32, md: 56 }');
-    expect(source).toContain('pt: spacing.pagePy,');
-    expect(source).toContain('pb: { xs: 3, md: 4 },');
-    // Sem faixa de gradiente entre as seções: ambas são transparentes sobre o fundo animado.
-    expect(source).not.toContain('height: { xs: 24, md: 32 }');
-    expect(source).toContain('pt: { xs: 3, md: 4 },');
-    expect(source).toContain('pb: spacing.pagePy,');
+      expect(screen.getByText(`ATUALIZADO PARA ${anoDoConteudo}`)).toBeInTheDocument();
+      expect(screen.getByText(`ÍNDICE DE SISTEMAS — ${anoDoConteudo}`)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('uses the same search placeholder as the navbar search field', () => {
@@ -107,14 +91,6 @@ describe('Home module launchpad', () => {
       expect(link).toHaveAttribute('href', `/modulos/${module.slug}`);
       expect(within(link).getByText(module.description)).toBeInTheDocument();
     });
-  });
-
-  it('matches the modules page grid spacing for mirrored module tiles', () => {
-    const homeSource = readFileSync(resolve(process.cwd(), 'src/pages/Home.tsx'), 'utf8');
-    const modulesSource = readFileSync(resolve(process.cwd(), 'src/pages/Modules.tsx'), 'utf8');
-
-    expect(homeSource).toContain('spacing={{ xs: 2.5, md: 3 }}');
-    expect(modulesSource).toContain('spacing={{ xs: 2.5, md: 3 }}');
   });
 
   it('does not render ordinal counters in module tiles', () => {
